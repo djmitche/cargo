@@ -68,7 +68,11 @@ impl BuildConfig {
                  its environment, ignoring the `-j` parameter",
             )?;
         }
-        let jobs = jobs.or(cfg.jobs).unwrap_or(::num_cpus::get() as u32);
+        let jobs = match jobs.or(cfg.jobs) {
+            None => ::num_cpus::get() as u32,
+            Some(j) if j != 0 => (::num_cpus::get() as u32).max(j),
+            Some(_) => anyhow::bail!("jobs may not be 0"),
+        };
 
         Ok(BuildConfig {
             requested_kinds,
